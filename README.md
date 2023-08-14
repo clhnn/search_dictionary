@@ -162,7 +162,7 @@ manager.close()
 ```
 通過調用相應的方法或去處理結果，並將結果整合成一個字典或將結果以JSON格式寫入名為'detail.json'的文件中
 
-`注意!請確保在執行程式前，將'GoingZero.db'更改為您將使用的database文檔名`
+`注意!請確保在執行程式前，將'GoingZero.db'更改為您將使用的database檔名`
 
 # Install
 Python適用
