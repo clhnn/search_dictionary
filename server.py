@@ -14,7 +14,7 @@ def favicon():
 @app.route('/', methods=['POST'])
 def search():
     # 連接到 SQLite 資料庫
-    conn = sqlite3.connect('GoingZero1.db')
+    conn = sqlite3.connect('GoingZero.db')
     cursor = conn.cursor()
 
     # 初始化字典和串列來儲存資料
