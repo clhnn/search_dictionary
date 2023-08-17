@@ -233,7 +233,7 @@ manager.close()
 `注意!在執行程式前請確保已安裝所需的Python庫:'sqlite3'、'json'、'requests'和'flask'`
 
 ## 資料庫準備
-將您的 SQLite 資料庫檔案複製到程式的根目錄，並確保檔案名稱與程式碼中指定的名稱相符（預設為 `GoingZero.db`）。資料庫需要具有 "sysdict" 表，以便程式可以正確執行。
+將您的 SQLite 資料庫檔案複製到程式的目錄，並確保檔案名稱與程式碼中指定的名稱相符（預設為 `GoingZero.db`）。資料庫需要具有 "sysdict" 表，以便程式可以正確執行。
 
 ###### 導入所需的模組
 - `sqlite3`：用於處理 SQLite 數據庫。
