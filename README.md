@@ -1,7 +1,7 @@
 # **Introduction**
 此示範程式皆為Python
 
-# DictionaryManager
+# **search.py**
 這是一個簡單的字典管理器程式，使用 SQLite 資料庫儲存字詞資料，並提供搜尋、新增和刪除字詞的功能。它還可以將字詞資料輸出為字典或 JSON 檔案。
 
 `注意!在執行程式前請確保已安裝所需的Python庫:'sqlite3'和'json'`
@@ -163,6 +163,110 @@ manager.close()
 通過調用相應的方法或去處理結果，並將結果整合成一個字典或將結果以JSON格式寫入名為'detail.json'的文件中
 
 `注意!請確保在執行程式前，將'GoingZero.db'更改為您將使用的database檔名`
+
+# **server.py**
+這是一個基於Flask的簡單Web應用程式，用於查詢存儲在SQLite資料庫中的字典資料。使用者可以提交一個包含要查詢的字詞和輸出選項的POST請求，然後應用程式會回傳符合查詢的字典資料。
+
+`注意!在執行程式前請確保已安裝所需的Python庫:'sqlite3'、'json'、'requests'和''flask`
+
+## 資料庫準備
+將您的 SQLite 資料庫檔案複製到程式的根目錄，並確保檔案名稱與程式碼中指定的名稱相符（預設為 `GoingZero.db`）。資料庫需要具有 "sysdict" 表，以便程式可以正確地執行。
+
+###### 初始化Flask web 應用程式
+初始化 Flask Web 應用程序是為了創建一個可用於處理 Web 請求和響應的應用程序實例。在初始化過程中，您可以進行各種配置和設置，以確保應用程序在運行時具備所需的功能和行為。
+```js
+app = Flask(__name__)
+```
+###### 定義處理請求 favicon.ico 的路由
+這段代碼定義了一個路由 /favicon.ico，用於處理請求 favicon.ico 的情況。在這裡，我們簡單地返回一個空響應和 404 狀態碼，表示找不到該文件。
+
+```js
+@app.route('/favicon.ico')
+def favicon():
+    return '', 404
+```
+###### 定義處理 POST 請求的搜尋功能的路由
+"search方法":用於處理根路徑 / 的 POST 請求。該方法包括以下步驟：
+- 連接到 SQLite 數據庫，並創建游標對象 cursor。
+- 從請求中獲取數據並進行處理：
+  - 從 POST 請求的 JSON 數據中獲取要搜索的單詞和用戶的選擇。
+  - 執行 SQL 查詢以檢索與請求單詞匹配的行。
+  - 將結果轉換為字典和列表的形式。
+- 根據用戶的選擇返回結果：
+  - 如果選擇為 1，將結果作為 JSON 數據返回給客戶端。
+  - 如果選擇為 2，將結果寫入名為 detail.json 的 JSON 文件中，並返回一個表示寫入成功的 JSON 響應。
+- 最後關閉數據庫連接和游標：
+  - 在 finally 中關閉數據庫連接和游標。
+
+```js
+  # 定義處理 POST 請求的搜尋功能的路由
+@app.route('/', methods=['POST'])
+def search():
+    # 連接到 SQLite 資料庫
+    conn = sqlite3.connect('GoingZero1.db')
+    cursor = conn.cursor()
+
+    # 初始化字典和串列來儲存資料
+    dict_word = {}  # 儲存與特定單字相關的字典資料
+    DICT_keys = []  # 儲存資料庫表的欄名
+
+    # 使用 PRAGMA 取得資料庫表 'sysdict' 的欄名資訊
+    cursor.execute("PRAGMA table_info(sysdict)")
+    headlines = cursor.fetchall()
+
+    # 提取欄名並將其儲存在 DICT_keys 串列中
+    for headline in headlines:
+        DICT_keys.append(headline[1])
+
+    # 從請求中取得 JSON 資料
+    data = request.json
+    find_word = data['word']    # 要搜尋的單字
+    choice = data['choice']     # 使用者的選擇
+
+    try:
+        # 執行查詢以檢索 'word' 符合請求單字的列
+        cursor.execute(f"SELECT * FROM sysdict WHERE word = '{find_word}'")
+        rows = cursor.fetchall()
+
+        dictElms = dict()
+        dictElms['word'] = find_word
+        records = []
+        for row in rows:
+            assert len(DICT_keys) == len(row)
+            record = dict()
+            for (key, value) in zip(DICT_keys, row):
+                if key == 'word':
+                    continue
+                record[key] = value
+
+            records.append(record)
+
+        dictElms['entries'] = records
+        jlogs = json.dumps(dictElms, indent=4, ensure_ascii=False)
+        
+        # 根據使用者的選擇，將資料回傳為 JSON 或寫入 JSON 檔案
+        if choice == '1':
+            return jsonify(jlogs)
+        elif choice == '2':
+            with open('detail.json', 'a', encoding='utf-8') as f:
+                f.write(jlogs)
+            return jsonify({'message': 'JSON 檔案輸出成功'})
+
+    finally:
+        # 關閉資料庫連接和游標
+        cursor.close()
+        conn.close()
+```
+###### 啟動 Flask 應用程序
+- 在腳本執行時，通過調用 app.run() 啟動 Flask 應用程序。
+- 指定主機為 0.0.0.0，表示可以從任何 IP 地址訪問應用程序。
+- 指定端口號為 5050。
+```js
+# 在執行腳本時啟動 Flask 應用程式
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5050)
+```
+
 
 # Install
 Python適用
