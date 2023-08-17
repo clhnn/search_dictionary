@@ -116,7 +116,7 @@ class DictionaryManager:
         self.conn.close()
 
 # 資料庫檔案的名稱
-db_file = 'GoingZero1.db'
+db_file = 'GoingZero.db'
 
 # 創建 DictionaryManager 物件
 manager = DictionaryManager(db_file)
