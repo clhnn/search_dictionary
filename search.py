@@ -21,25 +21,40 @@ class DictionaryManager:
             f.write(json.dumps(self.DICT_keys, ensure_ascii=False) + '\n')
 
     def lookup(self, word):
+        # 執行 SQL 查詢來查找符合指定單詞的字典項目
         self.cursor.execute(f"SELECT * FROM sysdict WHERE word = '{word}'")
+        # 擷取所有的查詢結果
         rows = self.cursor.fetchall()
 
+        # 建立一個字典來存儲查詢結果的所有字典項目
         dictElms = dict()
         dictElms['word'] = word
         records = []
+
+        # 迭代每一個查詢結果的行
         for row in rows:
+            # 確認字典的鍵的數量與行的長度相同
             assert len(self.DICT_keys) == len(row)
             record = dict()
+
+            # 迭代字典的鍵和行中的值，並將它們匹配起來
             for (key, value) in zip(self.DICT_keys, row):
+                # 忽略 'word' 鍵，因為它已經存在於 dictElms 中
                 if key == 'word':
                     continue
+                # 將鍵和值添加到記錄中
                 record[key] = value
 
+            # 添加記錄到字典項目的列表中
             records.append(record)
 
+        # 將字典項目的單詞和記錄存儲為字典
         dictElms['entries'] = records
+        # 將字典轉換為 JSON 字符串
         jlogs = json.dumps(dictElms, indent=4, ensure_ascii=False)
-
+        # 輸出 JSON 字符串
+        print(jlogs)
+        # 返回 JSON 字符串
         return jlogs
 
     def search_word(self):
