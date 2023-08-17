@@ -2,14 +2,14 @@
 此示範程式皆為Python
 
 # **search.py**
-這是一個簡單的字典管理器程式，使用 SQLite 資料庫儲存字詞資料，並提供搜尋、新增和刪除字詞的功能。它還可以將字詞資料輸出為字典或 JSON 檔案。
+這是一個字典管理器程式，使用 SQLite 資料庫儲存字詞資料，並提供搜尋、新增和刪除字詞的功能。它還可以將字詞資料輸出為字典或 JSON 檔案。
 
 `注意!在執行程式前請確保已安裝所需的Python庫:'sqlite3'和'json'`
 
 ## 資料庫準備
-將您的 SQLite 資料庫檔案複製到程式的根目錄，並確保檔案名稱與程式碼中指定的名稱相符（預設為 `GoingZero.db`）。資料庫需要具有 "sysdict" 表，以便程式可以正確地執行。
+將您的 SQLite 資料庫檔案複製到程式的目錄，並確保檔案名稱與程式碼中指定的名稱相符（預設為 `GoingZero.db`）。資料庫需要具有 "sysdict" 表，以便程式可以正確執行。
 
-###### 導入所需的模塊
+###### 導入所需的模組
 - `sqlite3`：用於處理 SQLite 數據庫。
 - `json`：用於處理 JSON 數據。
 ```js
@@ -46,6 +46,61 @@ def __init__(self, db_file):
             f.write(json.dumps(self.DICT, ensure_ascii=False) + '\n')
 ```
 
+###### lookup方法
+"lookup方法":是一個用於從資料庫中查詢字典項目的函式。它接受一個字詞作為輸入，並返回符合該字詞的字典項目的 JSON 字串表示。
+- 執行 SQL 查詢來查找符合指定字詞的字典項目。
+- 建立一個字典 dictElms 來存儲查詢結果的所有字典項目。
+- 在 dictElms 字典中，將字詞存儲在 'word' 鍵中，以標識查詢結果對應的字詞。
+- 創建一個空列表 records，用於存儲每個字典項目的記錄。
+- 迭代每一個查詢結果的行。
+- 確認字典的鍵的數量與行的長度相同。
+- 創建一個空字典 record，用於存儲每個字典項目的記錄。
+- 迭代字典的鍵和查詢結果行中的值，並將它們一一配對。
+- 如果鍵是 'word'，則忽略該鍵，因為該鍵已經存在於 dictElms 字典中。
+- 將鍵和值添加到 record 字典中。
+- 將 record 字典添加到 records 列表中，表示一個字典項目的完整記錄。
+- 在 dictElms 字典中，將 records 列表存儲為 'entries' 鍵，表示所有字典項目的列表。
+- 將 dictElms 字典轉換為具有縮排和非 ASCII 字符的 JSON 字串。
+- 輸出 JSON 字串。
+- 返回 JSON 字串。
+```js
+    def lookup(self, word):
+        # 執行 SQL 查詢來查找符合指定單詞的字典項目
+        self.cursor.execute(f"SELECT * FROM sysdict WHERE word = '{word}'")
+        # 擷取所有的查詢結果
+        rows = self.cursor.fetchall()
+
+        # 建立一個字典來存儲查詢結果的所有字典項目
+        dictElms = dict()
+        dictElms['word'] = word
+        records = []
+
+        # 迭代每一個查詢結果的行
+        for row in rows:
+            # 確認字典的鍵的數量與行的長度相同
+            assert len(self.DICT_keys) == len(row)
+            record = dict()
+
+            # 迭代字典的鍵和行中的值，並將它們匹配起來
+            for (key, value) in zip(self.DICT_keys, row):
+                # 忽略 'word' 鍵，因為它已經存在於 dictElms 中
+                if key == 'word':
+                    continue
+                # 將鍵和值添加到記錄中
+                record[key] = value
+
+            # 添加記錄到字典項目的列表中
+            records.append(record)
+
+        # 將字典項目的單詞和記錄存儲為字典
+        dictElms['entries'] = records
+        # 將字典轉換為 JSON 字符串
+        jlogs = json.dumps(dictElms, indent=4, ensure_ascii=False)
+        # 輸出 JSON 字符串
+        print(jlogs)
+        # 返回 JSON 字符串
+        return jlogs
+```
 ###### search_word方法
 "search_word方法":這是主要的搜尋和操作方法，用戶可以透過這個方法來查詢字詞及執行其他操作。該方法包括以下步驟：
 - 使用者輸入欲搜尋的字詞 (`find_word`)。
@@ -55,7 +110,7 @@ def __init__(self, db_file):
   - 如果找到一筆資料，直接取得該筆資料。
   - 如果找不到資料，提示用戶是否要新增資料。
 - 將查詢結果以字典格式存入 `self.dict_word` 中。
-- 根據用戶的選擇，將資料以字典或 JSON 格式輸出到屏幕或檔案。
+- 根據用戶的選擇，將資料以字典或 JSON 格式輸出到螢幕或檔案。
 - 如果用戶想要刪除字詞資料，根據用戶的輸入刪除資料。
 - 詢問用戶是否繼續查詢，如果不需要則結束循環。
 ```js
@@ -143,7 +198,7 @@ def search_word(self):
 ```
 
 ###### close方法
-"close方法":這個方法用於關閉資料庫連接和游標，以確保資源被正確釋放。
+"close方法":這個方法用於關閉資料庫連接和游標，以確保資料被正確關閉。
 ```js
 def close(self):
         # 關閉資料庫連接
@@ -153,7 +208,7 @@ def close(self):
 ###### 主程式
 - 創建一個 `DictionaryManager` 物件，並指定使用的 SQLite 資料庫檔案為 `'GoingZero.db'`。
 - 調用 `search_word` 方法，開始使用者的字詞搜尋和操作。
-- 調用 `close` 方法來關閉資料庫連接，確保程式執行完畢後資源被正確釋放。
+- 調用 `close` 方法來關閉資料庫連接，確保程式執行完畢後資料被正確關閉。
 ```js
 #主程式部分
 # 資料庫檔案的名稱
@@ -178,9 +233,9 @@ manager.close()
 `注意!在執行程式前請確保已安裝所需的Python庫:'sqlite3'、'json'、'requests'和'flask'`
 
 ## 資料庫準備
-將您的 SQLite 資料庫檔案複製到程式的根目錄，並確保檔案名稱與程式碼中指定的名稱相符（預設為 `GoingZero.db`）。資料庫需要具有 "sysdict" 表，以便程式可以正確地執行。
+將您的 SQLite 資料庫檔案複製到程式的根目錄，並確保檔案名稱與程式碼中指定的名稱相符（預設為 `GoingZero.db`）。資料庫需要具有 "sysdict" 表，以便程式可以正確執行。
 
-###### 導入所需的模塊
+###### 導入所需的模組
 - `sqlite3`：用於處理 SQLite 數據庫。
 - `json`：用於處理 JSON 數據。
 - `Flask`、`request`、`jsonify`：用於構建和處理 Flask Web 應用程序。
@@ -191,37 +246,36 @@ from flask import Flask, request, jsonify
 ```
 
 ###### 初始化Flask web 應用程式
-初始化 Flask Web 應用程序是為了創建一個可用於處理 Web 請求和響應的應用程序實例。在初始化過程中，您可以進行各種配置和設置，以確保應用程序在運行時具備所需的功能和行為。
+初始化 Flask Web 應用程序是為了創建一個可用於處理 Web 請求和回應的應用程序實例。在初始化過程中，您可以進行各種配置和設置，以確保應用程序在運行時具備所需的功能和行為。
 ```js
 app = Flask(__name__)
 ```
 ###### 定義處理請求 favicon.ico 的路由
-這段代碼定義了一個路由 `/favicon.ico`，用於處理請求 favicon.ico 的情況。在這裡，我們簡單地返回一個空響應和 404 狀態碼，表示找不到該文件。
-
+這段代碼定義了一個路由 `/favicon.ico`，用於處理請求 favicon.ico 的情況。在這裡，我們返回一個404狀態碼，表示找不到該文件。
 ```js
 @app.route('/favicon.ico')
 def favicon():
     return '', 404
 ```
 ###### 定義處理 POST 請求的搜尋功能的路由
-"search方法":用於處理根路徑 / 的 POST 請求。該方法包括以下步驟：
+"search方法":用於處理路徑 / 的 POST 請求。該方法包括以下步驟：
 - 連接到 SQLite 數據庫，並創建游標對象 cursor。
 - 從請求中獲取數據並進行處理：
-  - 從 POST 請求的 JSON 數據中獲取要搜索的單詞和用戶的選擇。
-  - 執行 SQL 查詢以檢索與請求單詞匹配的行。
+  - 從 POST 請求的 JSON 數據中獲取要搜索的字詞和用戶的選擇。
+  - 執行 SQL 查詢以檢索與請求與字詞匹配的資料。
   - 將結果轉換為字典和列表的形式。
 - 根據用戶的選擇返回結果：
   - 如果選擇為 1，將結果作為 JSON 數據返回給客戶端。
-  - 如果選擇為 2，將結果寫入名為 `detail.json` 的 JSON 文件中，並返回一個表示寫入成功的 JSON 響應。
+  - 如果選擇為 2，將結果寫入名為 `detail.json` 的 JSON 文件中，並返回'JSON 檔案輸出成功'。
 - 最後關閉數據庫連接和游標：
   - 在 `finally` 中關閉數據庫連接和游標。
 
 ```js
-  # 定義處理 POST 請求的搜尋功能的路由
+# 定義處理 POST 請求的搜尋功能的路由
 @app.route('/', methods=['POST'])
 def search():
     # 連接到 SQLite 資料庫
-    conn = sqlite3.connect('GoingZero1.db')
+    conn = sqlite3.connect('GoingZero.db')
     cursor = conn.cursor()
 
     # 初始化字典和串列來儲存資料
@@ -232,7 +286,7 @@ def search():
     cursor.execute("PRAGMA table_info(sysdict)")
     headlines = cursor.fetchall()
 
-    # 提取欄名並將其儲存在 DICT_keys 串列中
+    # 提取欄名並將其儲存在 DICT_keys 字典中
     for headline in headlines:
         DICT_keys.append(headline[1])
 
@@ -242,7 +296,7 @@ def search():
     choice = data['choice']     # 使用者的選擇
 
     try:
-        # 執行查詢以檢索 'word' 符合請求單字的列
+        # 執行查詢以檢索 'word' 符合請求字詞的資料
         cursor.execute(f"SELECT * FROM sysdict WHERE word = '{find_word}'")
         rows = cursor.fetchall()
 
@@ -276,11 +330,11 @@ def search():
         conn.close()
 ```
 ###### 啟動 Flask 應用程序
-- 在腳本執行時，通過調用 `app.run()` 啟動 Flask 應用程序。
+- 在指令執行時，通過調用 `app.run()` 啟動 Flask 應用程序。
 - 指定主機為 `0.0.0.0`，表示可以從任何 IP 地址訪問應用程序。
 - 指定端口號為 `5050`。
 ```js
-# 在執行腳本時啟動 Flask 應用程式
+# 在執行指令時啟動 Flask 應用程式
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5050)
 ```
@@ -290,7 +344,7 @@ if __name__ == '__main__':
 
 `注意!在執行程式前請確保已安裝所需的Python庫:'json'和'requests'`
 
-###### 導入所需的模塊
+###### 導入所需的模組
 - `requests`：用於發送 HTTP 請求。
 - `json`：用於處理 JSON 數據。
 ```js
@@ -302,17 +356,17 @@ import json
 test_url 函數接受一個 URL 和可選的數據參數。 headers 是一個字典，指定請求的內容類型為 JSON。
 - 接受一個 URL 和可選的數據參數。
 - 設置請求的內容類型為 JSON。
-- 使用 `requests.post` 方法發送 POST 請求到指定的 URL，將數據轉換為 JSON 字符串並作為請求的主體數據。
+- 使用 `requests.post` 方法發送 POST 請求到指定的 URL，將數據轉換為 JSON 字符串並作為請求的數據。
 - 如果收到的響應狀態碼是 200，表示請求成功：
-  - 打印 "URL 可存取。" 的消息。
-  - 將響應內容的編碼設置為 UTF-8。
-  - 解碼響應內容以處理可能存在的中文編碼問題。
-  - 打印解碼後的內容。
-- 如果響應狀態碼不是 200：
-  - 打印 "URL 不可存取。狀態碼：" 的消息，並插入實際的狀態碼。
+  - 輸出 "URL 可存取。" 的訊息。
+  - 將輸出內容的編碼設置為 UTF-8。
+  - 解碼輸出內容以處理可能存在的中文編碼問題。
+  - 輸出解碼後的內容。
+- 如果輸出狀態碼不是 200：
+  - 輸出 "URL 不可存取。狀態碼：" 的訊息，並插入實際的狀態碼。
 - 如果發生連接錯誤或其他異常：
-  - 捕獲 `requests.exceptions.RequestException` 異常。
-  - 打印 "URL 不可存取。錯誤訊息：" 的消息，並顯示錯誤消息。
+  - 發現 `requests.exceptions.RequestException` 異常。
+  - 輸出 "URL 不可存取。錯誤訊息：" 的訊息，並顯示錯誤訊息。
 ```js
 def test_url(url, data=None):
     headers = {'Content-Type': 'application/json'}
