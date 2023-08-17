@@ -9,6 +9,14 @@
 ## 資料庫準備
 將您的 SQLite 資料庫檔案複製到程式的根目錄，並確保檔案名稱與程式碼中指定的名稱相符（預設為 `GoingZero.db`）。資料庫需要具有 "sysdict" 表，以便程式可以正確地執行。
 
+###### 導入所需的模塊
+- `sqlite3`：用於處理 SQLite 數據庫。
+- `json`：用於處理 JSON 數據。
+```js
+import sqlite3
+import json
+```
+
 ###### 初始化方法
 "初始化方法":當我們創建 `DictionaryManager` 物件時會被調用。在這個方法中，以下操作被執行：
 - 連接到 SQLite 資料庫：使用 `sqlite3.connect()` 方法連接到指定的 SQLite 資料庫檔案。
@@ -160,17 +168,27 @@ manager.search_word()
 # 關閉資料庫連接
 manager.close()
 ```
-通過調用相應的方法或去處理結果，並將結果整合成一個字典或將結果以JSON格式寫入名為'detail.json'的文件中
+通過調用相應的方法或去處理結果，並將結果整合成一個字典或將結果以JSON格式寫入名為`detail.json`的文件中
 
 `注意!請確保在執行程式前，將'GoingZero.db'更改為您將使用的database檔名`
 
 # **server.py**
 這是一個基於Flask的簡單Web應用程式，用於查詢存儲在SQLite資料庫中的字典資料。使用者可以提交一個包含要查詢的字詞和輸出選項的POST請求，然後應用程式會回傳符合查詢的字典資料。
 
-`注意!在執行程式前請確保已安裝所需的Python庫:'sqlite3'、'json'、'requests'和''flask`
+`注意!在執行程式前請確保已安裝所需的Python庫:'sqlite3'、'json'、'requests'和'flask'`
 
 ## 資料庫準備
 將您的 SQLite 資料庫檔案複製到程式的根目錄，並確保檔案名稱與程式碼中指定的名稱相符（預設為 `GoingZero.db`）。資料庫需要具有 "sysdict" 表，以便程式可以正確地執行。
+
+###### 導入所需的模塊
+- `sqlite3`：用於處理 SQLite 數據庫。
+- `json`：用於處理 JSON 數據。
+- `Flask`、`request`、`jsonify`：用於構建和處理 Flask Web 應用程序。
+```js
+import sqlite3
+import json
+from flask import Flask, request, jsonify
+```
 
 ###### 初始化Flask web 應用程式
 初始化 Flask Web 應用程序是為了創建一個可用於處理 Web 請求和響應的應用程序實例。在初始化過程中，您可以進行各種配置和設置，以確保應用程序在運行時具備所需的功能和行為。
@@ -178,7 +196,7 @@ manager.close()
 app = Flask(__name__)
 ```
 ###### 定義處理請求 favicon.ico 的路由
-這段代碼定義了一個路由 /favicon.ico，用於處理請求 favicon.ico 的情況。在這裡，我們簡單地返回一個空響應和 404 狀態碼，表示找不到該文件。
+這段代碼定義了一個路由 `/favicon.ico`，用於處理請求 favicon.ico 的情況。在這裡，我們簡單地返回一個空響應和 404 狀態碼，表示找不到該文件。
 
 ```js
 @app.route('/favicon.ico')
@@ -194,9 +212,9 @@ def favicon():
   - 將結果轉換為字典和列表的形式。
 - 根據用戶的選擇返回結果：
   - 如果選擇為 1，將結果作為 JSON 數據返回給客戶端。
-  - 如果選擇為 2，將結果寫入名為 detail.json 的 JSON 文件中，並返回一個表示寫入成功的 JSON 響應。
+  - 如果選擇為 2，將結果寫入名為 `detail.json` 的 JSON 文件中，並返回一個表示寫入成功的 JSON 響應。
 - 最後關閉數據庫連接和游標：
-  - 在 finally 中關閉數據庫連接和游標。
+  - 在 `finally` 中關閉數據庫連接和游標。
 
 ```js
   # 定義處理 POST 請求的搜尋功能的路由
@@ -258,16 +276,81 @@ def search():
         conn.close()
 ```
 ###### 啟動 Flask 應用程序
-- 在腳本執行時，通過調用 app.run() 啟動 Flask 應用程序。
-- 指定主機為 0.0.0.0，表示可以從任何 IP 地址訪問應用程序。
-- 指定端口號為 5050。
+- 在腳本執行時，通過調用 `app.run()` 啟動 Flask 應用程序。
+- 指定主機為 `0.0.0.0`，表示可以從任何 IP 地址訪問應用程序。
+- 指定端口號為 `5050`。
 ```js
 # 在執行腳本時啟動 Flask 應用程式
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5050)
 ```
 
+# **client.py**
+這個自動測試程式可以幫助您驗證您的Flask Web應用程式是否正常運作。
 
+`注意!在執行程式前請確保已安裝所需的Python庫:'json'和'requests'`
+
+###### 導入所需的模塊
+- `requests`：用於發送 HTTP 請求。
+- `json`：用於處理 JSON 數據。
+```js
+import requests
+import json
+```
+
+###### test_url方法
+test_url 函數接受一個 URL 和可選的數據參數。 headers 是一個字典，指定請求的內容類型為 JSON。
+- 接受一個 URL 和可選的數據參數。
+- 設置請求的內容類型為 JSON。
+- 使用 `requests.post` 方法發送 POST 請求到指定的 URL，將數據轉換為 JSON 字符串並作為請求的主體數據。
+- 如果收到的響應狀態碼是 200，表示請求成功：
+  - 打印 "URL 可存取。" 的消息。
+  - 將響應內容的編碼設置為 UTF-8。
+  - 解碼響應內容以處理可能存在的中文編碼問題。
+  - 打印解碼後的內容。
+- 如果響應狀態碼不是 200：
+  - 打印 "URL 不可存取。狀態碼：" 的消息，並插入實際的狀態碼。
+- 如果發生連接錯誤或其他異常：
+  - 捕獲 `requests.exceptions.RequestException` 異常。
+  - 打印 "URL 不可存取。錯誤訊息：" 的消息，並顯示錯誤消息。
+```js
+def test_url(url, data=None):
+    headers = {'Content-Type': 'application/json'}
+
+    try:
+        # 嘗試發送 POST 請求至指定的 URL
+        response = requests.post(url, data=json.dumps(data), headers=headers)
+        
+        # 如果收到 200 OK 的回應
+        if response.status_code == 200:
+            print("URL 可存取。")
+            print("回應內容：")
+            
+            # 解碼回應內容，處理中文編碼
+            response.encoding = 'utf-8'
+            decoded_content = response.text.encode().decode('unicode_escape')
+            print(decoded_content)
+            
+        else:
+            # 若回應狀態碼不是 200，顯示回應狀態碼
+            print(f"URL 不可存取。狀態碼：{response.status_code}")
+    except requests.exceptions.RequestException as e:
+        # 若發生連線錯誤，顯示錯誤訊息
+        print(f"URL 不可存取。錯誤訊息：{str(e)}")
+```
+
+###### 主程式
+- 定義要測試的 URL 為 `http://127.0.0.1:5050`。
+- 定義要發送的數據為一個包含 `"word"` 和 `"choice"` 鍵的字典。
+- 調用 `test_url` 函數，傳遞 URL 和數據參數進行測試。
+```js
+# 要測試的 URL
+url_to_test = "http://127.0.0.1:5050"
+# 要傳送的資料
+data_to_send = {"word": "懶惰蟲","choice":"1"}
+# 測試指定的 URL 和資料
+test_url(url_to_test, data=data_to_send)
+```
 # Install
 Python適用
 ```js
@@ -278,3 +361,11 @@ pip install sqlite3
 pip install json
 ```
 這個模組允許我們讀取和寫入 JSON 格式的資料，該格式常用於儲存和交換結構化的資料。
+```js
+pip install flask 
+```
+這個模組是一個用於構建 Web 應用程序的輕量級 Python 框架。
+```js
+pip install requests
+```
+這個模組用於發送HTTP請求。
